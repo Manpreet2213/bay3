@@ -1,14 +1,4 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Heavy-duty truck mechanic trainer: guided electrical lessons, how-it-works animations, tools, and diagnostic work orders.">
-<meta name="theme-color" content="#1f5ea8">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png" type="image/png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Bay Three</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -122,6 +112,18 @@ nav button{font-size:13px;letter-spacing:.04em}
 details.wo>summary{cursor:pointer;list-style:none}
 details.wo>summary::-webkit-details-marker{display:none}
 .mrules{display:grid;gap:4px;font-size:14px}
+.testwrap{display:grid;gap:4px}
+.howd{background:var(--panel);border:1px solid var(--line);border-radius:5px;margin-bottom:4px}
+.howd>summary{cursor:pointer;padding:8px 12px;font:500 13px var(--f-body);color:var(--accent);list-style:none}
+.howd>summary::-webkit-details-marker{display:none}
+.howd>summary::before{content:"▸ "}
+.howd[open]>summary::before{content:"▾ "}
+.howto{display:grid;gap:8px;padding:0 12px 12px}
+.hrow{display:grid;grid-template-columns:72px 1fr;gap:10px;font-size:14px}
+.hrow b{font:600 11px var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-top:2px}
+.hsteps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+.hwarn{border-left:4px solid var(--bad);padding:4px 0 4px 10px;font-size:14px}
+.hwarn b{color:var(--bad)}
 .anwrap{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden}
 #anim{display:block;width:100%;height:auto}
 .ancap{padding:10px 12px;border-top:1px dashed var(--line);font-size:15px;min-height:3.2em}
@@ -184,8 +186,6 @@ details.wo>summary::-webkit-details-marker{display:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
-</head>
-<body>
 <header><div class="wrap" style="padding-block:0"><div class="hd">
   <div class="brand">Bay Three<small id="rankName">APPRENTICE · LEVEL 1</small></div>
   <div class="stats"><div><b id="sRep">0</b><span>REP</span></div><div><b id="sCash">$0</b><span>EARNED</span></div></div>
@@ -9753,6 +9753,285 @@ function ssOf(j){
   if(vm&&VM2SS[vm])return VM2SS[vm];
   return "U5135.0";
 }
+
+/* ================= HOW-TO LIBRARY =================
+   H(regex, {t:tools, w:where to look / how to hook up, s:[steps], c:caution, v:verify})
+   First match wins, so put specific patterns before general ones. */
+const H=(re,o)=>[re,o];
+
+/* ---------- HOW TO RUN A TEST ---------- */
+const THOW=[
+H(/voltage drop/i,{t:["DMM on V⎓","back probe pins or sharp-tipped leads"],
+ w:"Both probes go on the SAME circuit, one on each end of the piece you are testing: the two ends of a cable, across a connector, across a switch, or from a ground pin to the frame.",
+ s:["Leave the circuit connected and powered. Voltage drop only shows up while current is flowing.","Turn the load on (lights on, cranking, brakes applied) so current is actually moving.","Red probe on the upstream end, black on the downstream end.","Read the volts. On a good wire, fuse, switch or ground you want under about 0.2 V. On a big cable while cranking, under about 0.5 V.","Work along the circuit a section at a time until the voltage disappears into one short piece. That piece is your fault."],
+ c:"A dead circuit with no current flowing reads 0 V even when it is badly corroded. You must have the load switched on.",
+ v:"Clean or replace the bad piece, then drop test again and confirm it is under spec."}),
+H(/resistance|ohm|continuity|^measure .*(coil|element|winding|sensor)/i,{t:["DMM on Ω or continuity","back probe pins"],
+ w:"Across the two ends of the part or wire you are testing, with the part unplugged from the circuit.",
+ s:["Turn the power OFF. Disconnect the battery, or unplug the component. The meter supplies its own tiny current and any outside voltage ruins the reading.","Touch the leads together first and note the lead resistance (often 0.1–0.3 Ω). Subtract it from small readings.","Put one probe on each terminal of the part.","Compare to spec. OL means open (broken inside). Near 0 Ω where it should have resistance means shorted.","To test a wire, read it end to end. Then read from one end to ground to check it is not shorted to the chassis."],
+ c:"Never measure resistance on a live circuit. On modules and sensors, do not force the leads into the terminals, you will spread them.",
+ v:"After the repair, read it again and confirm the value is in spec."}),
+H(/clamp|current draw|parasitic|amp/i,{t:["clamp (inductive) ammeter"],
+ w:"Clamp the jaws around ONE wire only. Around both the feed and the return it reads zero, because the two currents cancel.",
+ s:["Zero the meter with the jaws closed and empty.","Open the jaws and close them around the single wire you want to read.","Keep the wire near the middle of the jaws and the jaws fully closed.","Read while the circuit is working.","For a parasitic draw, key off, let the modules go to sleep (often 20–60 minutes), then read the main battery cable."],
+ c:"Mind the arrow on the jaws if you care about direction. Keep the clamp away from other heavy cables, they skew the reading.",
+ v:"After the repair, read the same wire again and confirm the current is back to normal."}),
+H(/scan tool|read codes|fault code|live data|cutout|actuation|output test|calibration code|network scan/i,
+ {t:["scan tool / laptop with OEM software","9-pin Deutsch (or 6-pin) diagnostic cable"],
+ w:"The diagnostic connector is usually under the dash on the driver side, near the steering column or on the kick panel.",
+ s:["Key off, plug the cable into the truck connector first, then the tool.","Key on, engine off, and let the tool find every module, not just the engine.","Write down ACTIVE codes and INACTIVE (stored) codes separately. Inactive codes are history and may be old.","Open the freeze frame or snapshot on the code. It shows what the truck was doing when the fault set.","Look at live data and compare related readings against each other, not just against spec.","Only clear codes AFTER you have recorded them."],
+ c:"A code names the circuit the module is unhappy with, not the broken part. You still have to test the circuit.",
+ v:"Clear the codes, run the truck through the conditions in the freeze frame, and confirm the code stays away."}),
+H(/soap|leak (test|check)|leakage|applied leak|released leak/i,{t:["spray bottle of soapy water","air pressure gauge","mirror"],
+ w:"Fittings, hose ends, valve bodies and chamber clamp rings. Listen first, then spray where you hear it.",
+ s:["Build the system to full pressure and shut the engine off.","Listen in a quiet bay. Your ears will get you to the right area faster than spraying everything.","Spray the suspect joints and watch for growing bubbles.","For an applied leak, have someone hold the brake pedal down while you spray and watch the dash gauges.","Time the pressure drop on the gauges over one full minute, do not guess."],
+ c:"Chock the wheels. Never put your hands near a slack adjuster or chamber while someone works the pedal.",
+ v:"Repair, build pressure again and re-time the leak-down to confirm it is inside the limit."}),
+H(/pressure test|pressurize|charge air cooler|cooling system pressure|hold pressure/i,
+ {t:["pressure test kit with the right adapter","regulated shop air","soapy water"],
+ w:"Cap the openings and feed air or test pressure in at the fitting the kit provides.",
+ s:["Let the system cool before you open anything that holds hot fluid.","Fit the correct adapter and cap off every other opening.","Bring it up to the pressure the maker lists, no more.","Start a timer and watch the gauge for the stated time.","If it drops, spray the joints and seams with soapy water to find where."],
+ c:"Never open a hot cooling system. Steam burns badly. Stay out of line with any cap or plug under pressure.",
+ v:"After the repair, pressure test again and confirm it holds for the full time."}),
+H(/stroke|pushrod/i,{t:["brake stroke ruler or tape","chock blocks","helper or brake applicator"],
+ w:"At each brake chamber, on the pushrod between the chamber and the slack adjuster.",
+ s:["Chock the wheels and release the parking brakes with the system at full pressure.","Mark the pushrod where it leaves the chamber with the brakes released.","Have a helper make and hold a full brake application at about 90–100 psi.","Measure how far the mark moved. That is your stroke.","Compare to the readjustment limit for that chamber type and size, which is stamped or listed on the chamber."],
+ c:"Know your chamber type. A standard and a long-stroke chamber of the same size have different limits. Keep clear of moving linkage.",
+ v:"After adjusting or replacing, measure stroke again on every wheel of that axle."}),
+H(/dial indicator|end play|runout|backlash/i,{t:["dial indicator","magnetic base","pry bar"],
+ w:"Mount the magnetic base on something that does not move, and set the indicator tip square against the surface you are measuring.",
+ s:["Clean the surface the tip rides on. Dirt gives you a false reading.","Set the base on solid, non-moving metal and make sure the arm is tight.","Preload the indicator a little so the needle can move both ways, then zero it.","Move the part through its travel: push and pull the wheel for end play, rotate for runout.","Read the total swing of the needle and compare to spec. Repeat it to be sure."],
+ c:"A loose magnetic base or a flexing arm will give you a reading that is pure fiction. Check it is solid before trusting any number.",
+ v:"After adjusting, zero and measure again."}),
+H(/feeler|valve lash|overhead|clearance/i,{t:["feeler gauge set","socket and breaker bar to bar the engine","torque wrench","OEM spec sheet"],
+ w:"Between the rocker and the valve bridge or stem, on the cylinder that is on its setting mark.",
+ s:["Engine OFF and cool, or at the temperature the maker states.","Bar the engine over to the correct timing mark for the cylinder you are setting.","Slide the correct blade in. You want a light, even drag, not loose and not forced.","Hold the adjusting screw still and tighten the locknut to spec, then re-check the drag, it often changes.","Work through the firing order so you do not miss a cylinder."],
+ c:"Setting lash at the wrong mark gives you a wrong clearance on every valve. Double check the mark before you adjust.",
+ v:"Go back over the ones you set and confirm the drag is still right after the locknuts are torqued."}),
+H(/refractometer|def (concentration|quality)|coolant (freeze|test)/i,{t:["refractometer","pipette","clean cloth","distilled water"],
+ w:"Take the sample from the tank or reservoir, not from a puddle or a jug.",
+ s:["Calibrate on distilled water first. It should read zero on the scale.","Wipe the prism clean and dry.","Put one or two drops on the prism and close the cover so the fluid spreads thin with no bubbles.","Hold it to a light and read where the shadow line crosses the scale.","Use the right scale. DEF is read as % urea (about 32.5 %), coolant as freeze point."],
+ c:"Clean the prism between samples or the last fluid skews the next reading.",
+ v:"After a drain and refill, sample again and confirm the strength is right."}),
+H(/visual inspect|perform visual|inspect|look at|check the condition|borescope/i,
+ {t:["good light / drop light","inspection mirror","clean rag","gloves"],
+ w:"Start at the complaint and work outward. Look at what was touched most recently, then follow the system.",
+ s:["Clean the area first. You cannot see a leak through a coat of road grime.","Look for the obvious: wet spots, dry crusty trails, rub marks, cracks, missing or loose fasteners, chafed wires.","Follow every wet trail UP to its highest point. That is where it is leaking from, gravity carries it down.","Wiggle connectors, hoses and linkage by hand and feel for play or looseness.","Compare left to right, or one wheel end to the others. The odd one out is your clue."],
+ c:"Engine off and keys out before you reach near a fan or belts. Chock the wheels before going under.",
+ v:"After the repair, clean the area and run the truck so you can tell a new leak from the old mess."}),
+H(/torque|retorque|tightness/i,{t:["torque wrench of the right range","correct socket","OEM torque spec"],
+ w:"On the fastener itself, with a straight pull on the handle grip.",
+ s:["Clean the threads and the seating faces first. Dirt and rust give false readings.","Check whether the spec is dry or lubricated and match it. Oil on a dry spec over-tightens the bolt.","Set the wrench and pull smoothly. Stop at the first click.","Work in the pattern the maker gives, usually a star or criss-cross, in stages.","Wind the wrench back to its lowest setting before you put it away."],
+ c:"Never loosen a fastener with a torque wrench. An impact gun is not a torque wrench.",
+ v:"Re-torque after the first short run if the maker calls for it, as wheels and U-bolts normally do."}),
+H(/road test|drive the truck|on the highway|under load/i,{t:["scan tool with live data logging","notepad","safe test route"],
+ w:"On a route that reproduces the complaint: a grade for power faults, a rough road for noises and vibration.",
+ s:["Get the exact conditions from the driver first: speed, gear, load, temperature, how long into the trip.","Do a pre-trip and check the truck is safe to drive before you take it out.","Take a second person to watch the scan tool so you can keep your eyes on the road.","Reproduce the complaint, do not just drive around. If it only does it loaded on a hill, you need a hill.","Note the exact conditions when it happens: speed, rpm, gear, temperature."],
+ c:"Never road test a truck with a brake, steering or tire defect. Fix the safety item first.",
+ v:"Road test again after the repair, under the same conditions, before you call it fixed."}),
+H(/compression|blow-?by|crankcase pressure|cylinder balance|contribution/i,
+ {t:["compression tester with the right adapter","blow-by (manometer) gauge","scan tool"],
+ w:"At the injector or glow plug hole for compression, and at the crankcase breather for blow-by.",
+ s:["Bring the engine to operating temperature unless the maker says otherwise.","Disable fuel and shutdown so the engine cannot start while you crank it.","Fit the adapter finger tight, then snug. Do not cross-thread the hole.","Crank for the number of revolutions the maker states, the same count on every cylinder.","Compare cylinders to each other. The spread between them matters more than the absolute number."],
+ c:"Keep clear of the opening while cranking. Never bar an engine over with your fingers near the gear train.",
+ v:"After repair, retest the weak cylinder and confirm it now matches the others."}),
+H(/dry park|rock the wheel|shake test|play/i,{t:["pry bar","good light","helper"],
+ w:"At each joint: tie rod ends, drag link, kingpins, U-joints, spring pins.",
+ s:["Park on level ground, chock the wheels and keep the engine running for a power steering dry park check.","Have the helper rock the steering wheel back and forth a few inches while you watch each joint.","Watch where motion STOPS being passed along. The joint that moves without moving the next part is worn.","For kingpins and wheel bearings, lift the axle so the weight is off, then pry and watch with a dial indicator.","Put your hand across the joint so you can feel the knock as well as see it."],
+ c:"Keep hands clear of pinch points while the wheels move. Never get under a truck held only by a jack.",
+ v:"After the repair, repeat the check and confirm the play is gone, then set the alignment."}),
+H(/temperature|infrared|thermal|hot/i,{t:["infrared thermometer","contact pyrometer"],
+ w:"Point at the same spot on each wheel end, hub, or component so you can compare like with like.",
+ s:["Hold the gun the same distance from each spot. Distance changes the area it reads.","Read right after a run, before things cool off.","Compare the same part on each side of the truck. A difference is more useful than the number.","On shiny metal, the reading can be low. Aim at a dull or painted part of the same piece.","Note anything far hotter or colder than its mates."],
+ c:"Aftertreatment and exhaust parts stay dangerously hot long after a regen. Check with the gun before you touch anything.",
+ v:"Run the truck again after the repair and confirm the temperatures now match side to side."}),
+H(/^Multimeter/i,{t:["DMM","back probe pins"],
+ w:"At the connector or terminals for the circuit named in the test. Back probe from the rear so the connector stays plugged in.",
+ s:["Decide first what you are proving: is power getting there, is the ground good, or is the part itself good?","For volts, leave the circuit live and put black on a known good ground.","For ohms or continuity, turn the power off and unplug the part.","Compare what you read against spec, and against the same reading on a known good circuit.","Write the reading down before you move the probes."],
+ c:"Never use a test light on module, sensor or CAN circuits. Never pierce insulation.",
+ v:"After the repair, take the same reading again and confirm it is now in spec."}),
+H(/^Gauges/i,{t:["the correct gauge for the system","adapters and hoses","OEM spec"],
+ w:"At the test port the maker provides for that system. Do not tee into a line unless the procedure says to.",
+ s:["Find the spec for this engine or system first, including the conditions it is measured at.","Fit the gauge at the proper port with the engine off and the system depressurized.","Bring the system to the stated condition: idle, rated rpm, hot, or full load.","Let the reading settle before you write it down.","Compare to spec, and compare related readings against each other."],
+ c:"Stay clear of hot and pressurized parts. Never crack a high-pressure fuel line with the engine running.",
+ v:"Repeat the measurement after the repair under the same conditions."}),
+H(/^Scan tool/i,{t:["scan tool with OEM software","diagnostic cable"],
+ w:"The diagnostic connector under the dash on the driver side.",
+ s:["Key on, connect and let the tool find every module.","Record active and inactive codes before clearing anything.","Open the freeze frame to see the conditions when it set.","Use live data to compare related values against each other.","Run the guided test or actuation the software offers for that circuit."],
+ c:"A code tells you which circuit complained, not which part failed.",
+ v:"Clear codes, reproduce the conditions and confirm the fault stays away."}),
+H(/^Road test/i,{t:["scan tool","safe route","helper"],
+ w:"On the road, under the conditions the driver described.",
+ s:["Get the exact conditions from the driver first.","Pre-trip the truck and confirm it is safe to drive.","Reproduce the complaint rather than just driving around.","Note speed, rpm, gear, load and temperature when it happens.","Bring a helper to watch the scan tool."],
+ c:"Never road test with a brake, steering or tire defect.",
+ v:"Road test again after the repair under the same conditions."}),
+H(/.*/,{t:["basic hand tools","good light","OEM service information"],
+ w:"At the component named in the test. Clean the area first so you can see what you are looking at.",
+ s:["Look up what the reading or condition should be before you start.","Set the truck up the way the spec assumes.","Take the measurement or make the observation carefully, and write it down.","Compare it against spec, and against the same thing on the other side of the truck.","Decide what the result rules IN and what it rules OUT before moving on."],
+ c:"Chock the wheels and keep clear of fans, belts and hot parts.",
+ v:"Repeat the check after the repair to prove it is fixed."}),
+];
+
+/* ---------- HOW TO DO THE REPAIR ---------- */
+const FHOW=[
+H(/replace.*(starter|cranking motor)/i,{t:["½ in or ¾ in drive socket set","breaker bar","torque wrench","wire brush","transmission jack or a helper (starters are heavy)"],
+ s:["Chock the wheels, set the parking brake, key out and tag it.","Disconnect the NEGATIVE battery cables first, then the positive. Tape the ends so they cannot touch.","Label and remove the cables from the starter: B (battery), S (switch signal) and the ground strap.","Support the starter before you pull the last bolt. A heavy-duty starter can be 20–30 kg.","Remove the mounting bolts and work the starter out of the flywheel housing.","Compare old and new: same nose length, tooth count, solenoid position and terminal layout.","Check the flywheel ring gear teeth through the opening before fitting the new starter. Chewed teeth will kill the new unit too.","Fit the new starter, start all bolts by hand, then torque to spec.","Clean the cable ends and mounting faces to bare metal, refit the cables, and tighten to spec.","Reconnect the positive battery cables first, then the negative."],
+ c:"The B terminal is live at all times. One slip with a wrench across it to the frame will weld the wrench and can burst a battery. Batteries disconnected, always.",
+ v:"Crank the engine and check it spins at normal speed. Voltage drop test the positive and ground sides while cranking, both under about 0.5 V."}),
+H(/replace.*alternator/i,{t:["socket set","serpentine belt tool or long breaker bar","torque wrench","DMM"],
+ s:["Disconnect the negative battery cables first and tape the ends.","Note how the belt is routed, or photograph it. Most trucks have a routing decal.","Release the tensioner, slip the belt off and let the tensioner down slowly.","Label and remove the output cable, ground and the small plug (ignition/sense wires).","Remove the mounting bolts and lift the alternator out.","Match the replacement for output rating, pulley type, mount style and plug.","Fit the new unit, torque the mounts, reconnect the output cable to spec and refit the small plug.","Reroute the belt exactly as it was and check it is seated in every groove before releasing the tensioner.","Reconnect the batteries, positive first, then negative."],
+ c:"If the output cable touches the frame while connected to the battery, it will arc hard. Batteries off first.",
+ v:"Run the engine and read charging voltage at the batteries, about 13.8–14.4 V. Check AC ripple is under about 0.5 V and voltage drop on the charge cable is under about 0.2 V."}),
+H(/replace.*(batteries|battery)/i,{t:["battery terminal wrench","terminal puller and cleaner","battery carrier or strap","baking soda and water","wire brush","safety glasses and gloves"],
+ s:["Safety glasses on. Battery acid blinds.","Disconnect the NEGATIVE cables first, then the positive.","Clean up any corrosion with baking soda and water, and let it stop fizzing before you rinse.","Lift the batteries out with a carrier. They are heavy and awkward.","Clean the box and the hold-downs, and check the box drains are clear.","Match the new batteries for group size, CCA and type, and replace them as a matched set of the same age.","Set them in, fit the hold-downs snug so they cannot move but not so tight that you crack the case.","Clean the cable ends to bright metal, fit them POSITIVE first, then negative, and tighten to spec.","Coat the terminals with the protectant or grease your shop uses."],
+ c:"Batteries give off hydrogen, which explodes. No sparks, no smoking. Never lay a tool across the terminals. Never charge or boost a frozen battery.",
+ v:"Load test the new bank, check charging voltage running, and do a parasitic draw test so you do not kill the new batteries too."}),
+H(/replace.*(slack adjuster)/i,{t:["socket set","snap ring pliers","grease gun","brake stroke ruler","torque wrench","chocks"],
+ s:["Chock the wheels, build full air pressure, then cage the spring brake on that wheel so the brake is fully released.","Mark the position of the old slack adjuster arm relative to the chamber pushrod.","Remove the clevis pin, the snap ring and the slack adjuster off the camshaft splines.","Clean the camshaft splines and check the camshaft bushings for play while you are in there.","Fit the new slack adjuster at the same installation angle as the old one. The angle matters: the arm and pushrod should be close to 90° at full application.","Fit the snap ring and the clevis pin with a new cotter pin.","Set the initial adjustment per the maker, then back it off the amount they state.","Grease the slack adjuster until fresh grease purges.","Uncage the spring brake."],
+ c:"Never work on brake linkage without caging the spring brake and chocking the wheels. The spring can take a hand off.",
+ v:"Measure pushrod stroke at 90–100 psi and confirm it is well inside the readjustment limit. Check both wheels on the axle so braking is even."}),
+H(/replace.*(brake chamber|spring brake)/i,{t:["socket set","caging bolt (comes with the chamber)","torque wrench","soapy water","chocks"],
+ s:["Chock the wheels and build full system pressure.","CAGE the spring with the release bolt supplied, and confirm the spring is fully wound back before you touch anything else.","Drain the air from the system.","Mark and disconnect the air lines, then the clevis from the slack adjuster.","Remove the mounting nuts and take the chamber off the bracket.","Never take a spring chamber apart. Replace it as a complete unit.","Fit the new chamber, torque the mounting nuts to spec, and reconnect the lines to the correct ports (service and emergency are different).","Set the pushrod length so the slack adjuster angle is right, then fit the clevis pin and a new cotter pin.","Remove the caging bolt and store it with the chamber."],
+ c:"A spring brake holds thousands of pounds of force. Uncaged, it can kill you. Cage it first, every single time.",
+ v:"Build pressure, soap test the new fittings, then measure pushrod stroke and confirm it is in limit."}),
+H(/reline|replace.*(brake shoes|linings|pads)|brake job/i,{t:["jack and stands","impact and torque wrench","brake spring tool","hammer","drum/rotor gauge","chocks"],
+ s:["Chock the wheels that stay on the ground, lift the axle and support it on rated stands.","Cage the spring brakes before you pull anything apart.","Remove the wheels and the drum, or the caliper for disc brakes.","Measure the drum inside diameter or the rotor thickness and compare to the discard spec stamped on the part. Past the limit it gets replaced, not machined.","Inspect the S-cam, camshaft bushings, rollers, anchor pins, springs and the cam head for wear. Replace the hardware, do not reuse tired springs.","Fit the new linings or pads, use new hardware, and lubricate only the points the maker lists. Keep every trace of grease off the friction surfaces.","Refit the drum or caliper and torque the fasteners to spec.","Adjust the brakes, or let the auto slack take it up per the maker's procedure.","Fit the wheels, torque in a star pattern in stages, and uncage the spring brakes."],
+ c:"Replace linings in axle sets, never one wheel. Uneven brakes pull the truck. Wear a respirator around brake dust.",
+ v:"Measure pushrod stroke on both wheels of the axle at 90–100 psi, then do a slow-speed brake check before the road test. Re-torque the wheels after the first run."}),
+H(/replace.*(air dryer|dryer cartridge|desiccant)/i,{t:["filter wrench or socket","drain tools","torque wrench","clean rag"],
+ s:["Drain all the air tanks to zero and confirm the gauges read zero.","Clean around the cartridge so dirt does not drop into the dryer.","Unscrew the old cartridge. Some are a spin-on, some are bolted.","Wipe the mounting face clean and check the purge valve and heater while you are there.","Oil the new seal lightly with clean oil and spin the cartridge on by hand.","Tighten by hand the amount printed on the cartridge, usually about ¾ to one full turn after the seal touches. Do not use a wrench unless the maker says to.","Drain every tank and close the drains."],
+ c:"Make sure the system is fully drained. A charged system can blast the cartridge off.",
+ v:"Build the system to cut-out and confirm the dryer purges. Drain the tanks after a week of service and check for water."}),
+H(/replace.*(wheel seal|hub seal)|bearing.*(seal|adjust)|repack/i,
+ {t:["jack and rated stands","hub puller or soft hammer","seal driver","torque wrench","dial indicator","solvent and clean rags","chocks"],
+ s:["Chock the wheels, lift the axle and support it on stands.","Drain the hub oil, or be ready to catch grease.","Pull the wheel, hub and drum as an assembly and keep the bearings in order.","Clean everything in solvent and inspect the bearings and races. Any pitting, bluing or flaking means both the bearing and its race are scrap, replaced as a set.","Drive the new race in square, fully seated, using a proper driver and not a screwdriver.","Pack the bearings with the correct grease, or set up for oil bath, whichever that hub uses.","Fit the new seal square with a seal driver and the lip facing the right way.","Set bearing adjustment per TMC RP 618: snug the nut while turning the hub, back it off, then set the final end play.","Fit the lock and the keeper and bend any tabs."],
+ c:"Never reuse a seal, and never mix an old race with a new bearing. Keep every trace of oil off the brake linings; oily linings are scrap.",
+ v:"Check end play with a dial indicator, 0.001–0.005 in. Refill the hub to the correct level and check for leaks and hub temperature after a road test."}),
+H(/replace.*(u-?joint|universal joint)/i,{t:["socket set","brass drift and hammer or U-joint press","snap ring pliers","grease gun","torque wrench","paint marker"],
+ s:["Chock the wheels and support the driveshaft so it cannot drop.","MARK the shaft and yokes before you take anything apart so you can put it back in phase.","Remove the strap or bearing cap bolts and lower the shaft carefully. Driveshafts are heavy.","Remove the snap rings and press the old joint out, one cap at a time.","Clean the yoke bores completely. Any burr will cock the new cap.","Press the new caps in square by hand pressure or a press, never hammering on the cap itself.","Fit new snap rings and make sure they seat fully in their grooves.","Refit the shaft matching your marks exactly, so the yokes are in phase.","Torque the strap or flange bolts to spec and use new hardware where the maker calls for it.","Grease the joint until fresh grease purges at ALL FOUR cap seals."],
+ c:"One spline out of phase and the shaft will vibrate hard enough to break things. Mark it before you pull it.",
+ v:"Road test for vibration and check the joint is tight and purging at all four seals."}),
+H(/replace.*(clutch)/i,{t:["transmission jack","clutch alignment tool","socket set","torque wrench","dial indicator","feeler gauge"],
+ s:["Chock the wheels and support the engine and transmission before you split them.","Remove the driveshaft (marked for phasing), the linkage, the air lines and the electrical connections.","Support the transmission on a jack and pull it straight back. Do not let it hang on the input shaft.","Inspect the flywheel for heat cracks and measure the flywheel face and pilot bearing. Resurface or replace as the maker allows.","Check for the oil leak that killed the old clutch: rear main seal and input shaft seal. Fix it now, or the new clutch is ruined too.","Fit the new clutch with the alignment tool in place and torque the cover bolts evenly in a criss-cross pattern.","Fit a new release bearing and clutch brake, and lubricate only the points listed.","Slide the transmission straight in. Never pull it in with the bolts; if it will not go, the splines are not lined up.","Torque the bell housing bolts to spec and refit everything you removed."],
+ c:"A transmission hanging on the clutch disc bends the disc and ruins it. Support it the whole way.",
+ v:"Set the internal clutch adjustment to the correct release bearing to clutch brake gap, then set free pedal to 1½–2 in. Confirm it shifts into first and reverse at a stop without grinding."}),
+H(/replace.*(water pump)/i,{t:["socket set","belt tool","torque wrench","scraper","coolant and a catch pan","pressure tester"],
+ s:["Let the engine cool. Never open a hot system.","Drain the coolant into a clean container and keep it if it is being reused.","Note the belt routing, release the tensioner and remove the belt.","Remove the hoses and the pump bolts, then the pump.","Scrape the mounting surfaces completely clean. Any old gasket left behind will leak.","Fit the new pump with a new gasket or O-ring, dry or sealed exactly as the maker specifies.","Start all bolts by hand, then torque in sequence to spec.","Refit the hoses with new clamps, and the belt in the correct routing.","Refill slowly with the correct coolant at the right mix, bleeding air as you go."],
+ c:"Mixing coolant types can turn the system to gel. Use what the truck calls for.",
+ v:"Run to temperature with the heater on, bleed the remaining air, pressure test, and check the weep hole stays dry."}),
+H(/replace.*(thermostat)/i,{t:["socket set","scraper","torque wrench","coolant and catch pan"],
+ s:["Let the engine cool and drain enough coolant to get below the housing.","Remove the housing bolts and lift the housing off.","Note which way the thermostat sits. Fitting it backwards blocks flow.","Scrape both surfaces clean.","Fit the new thermostat and new seal, the correct way round and fully seated in its recess.","Refit the housing and torque the bolts evenly to spec.","Refill with the correct coolant and bleed the air out."],
+ c:"A thermostat pinched by the housing will crack the housing when you torque it. Make sure it is seated in its groove.",
+ v:"Run to temperature and confirm it reaches and holds normal operating temperature, about 85–95 °C, with the upper hose warming up only after warm-up."}),
+H(/replace.*(turbo)/i,{t:["socket set","torque wrench","clean rags and caps","oil can","scraper"],
+ s:["Find out WHY the old turbo failed before fitting a new one: oil supply, oil drain, crankcase pressure or dirt. Otherwise the new one dies too.","Let the exhaust cool completely.","Cap every opening as you disconnect lines. A dropped nut in the intake destroys the engine.","Remove the intake and exhaust connections, the oil feed and drain lines, then the turbo.","Clean the oil out of the charge air cooler and piping. Oil left in there will be burned and can cause a runaway.","Check the oil feed line is clear and fit a NEW feed line if the maker calls for it. Check the drain is clear and not kinked.","Fit the new turbo with new gaskets, start all fasteners by hand, then torque to spec.","Prime the new turbo: pour clean oil into the oil feed port and spin the shaft by hand before connecting the feed.","Reconnect everything and double check no rags or caps are left inside."],
+ c:"Never start the engine without priming the turbo. A dry start wrecks the bearings in seconds.",
+ v:"Start and idle for several minutes with no load to let oil circulate. Check for leaks, then road test and confirm boost is back to spec."}),
+H(/replace.*(injector)/i,{t:["injector puller","socket set","torque wrench","clean rags and caps","new seals and copper washers","scan tool"],
+ s:["Clean the area thoroughly before opening anything. Dirt in a fuel system is fatal.","Relieve the fuel pressure and let a common rail system sit the time the maker states.","Remove the valve cover or lines as needed, capping every opening.","Remove the hold-down and pull the injector with the proper puller, never by prying on the body.","Clean the injector bore carefully with the right tool. Carbon left in the bore stops the new injector seating.","Fit NEW seals and a NEW copper washer. They are one-use parts.","Fit the injector, start the hold-down by hand, and torque in the sequence and stages the maker gives.","Reconnect the high-pressure line and torque it to spec, never reusing a line the maker calls one-use.","Enter the new injector's calibration or trim code into the ECM if the engine uses them."],
+ c:"High-pressure diesel can inject through your skin and cause an injury that needs surgery. Never crack a line with the engine running, and never put your hand near a spray.",
+ v:"Bleed the system, start the engine, check for leaks with the engine running from a safe distance, then run a cylinder cutout or contribution test and confirm the cylinder now matches."}),
+H(/replace.*(fuel filter|filters)|prime/i,{t:["filter wrench","clean rags","catch pan","hand or electric priming pump"],
+ s:["Clean around the filter head so dirt does not fall in.","Catch the fuel. Do not let it run onto the ground.","Remove the old filter and check the old seal came off with it. Two seals stacked will suck air.","Compare the new filter to the old one: same part, same seal, same thread.","Lightly oil the new seal with clean diesel and spin it on by hand, then hand tighten the amount printed on it.","Fill the filter with clean fuel before fitting if the maker allows it on that side of the pump.","Prime the system using the hand primer or the electric pump the way the maker says.","Crack the bleed point if the engine has one and bleed until clean fuel with no bubbles comes out."],
+ c:"Never crank the engine to prime it. You cook the starter and starve the pump. Never prefill a filter on the clean side of the final filter.",
+ v:"Start and run, check for leaks and air bubbles, and confirm fuel pressure and restriction are in spec."}),
+H(/replace.*(sensor)/i,{t:["correct socket or wrench","DMM","torque wrench","dielectric grease","scan tool"],
+ s:["Key off. On a 5 V sensor, disconnect the battery if the maker says to.","Clean around the sensor so nothing falls into the opening.","Unplug the connector by releasing the lock, never by pulling on the wires.","Inspect the connector terminals for green corrosion, spread pins or pushed-back terminals. A bad connector will make the new sensor look faulty too.","Remove the sensor and check the old seal or O-ring came out with it.","Fit the new sensor with a new seal, started by hand, then torque to spec. Over-tightening cracks sensor bodies.","Fit the connector until it clicks and apply dielectric grease if the shop uses it.","Clear the codes and, if the sensor needs it, run the calibration or relearn procedure."],
+ c:"Never pierce the wires to test. Use back probes. A pierced wire lets water in and rots the copper.",
+ v:"Key on and read the sensor live on the scan tool, comparing it with the other sensors and with a known reference. Then road test and confirm the code stays gone."}),
+H(/replace.*(fuse|relay)/i,{t:["fuse puller","DMM","test light (lamp circuits only)"],
+ s:["Find out WHY the fuse blew before you fit another one. A fuse is a symptom, not the fault.","Key off, pull the fuse and check it with the meter on continuity if you cannot see the element.","With the circuit off, check resistance from the circuit's feed to ground. Near 0 Ω means a short.","Split the circuit in half and recheck to narrow down where the short is, then keep halving.","Repair the short, then fit a fuse of the SAME rating. Never a bigger one.","For a relay, check the coil resistance and swap in a known good identical relay to confirm.","Use a diode-suppressed relay wherever the OEM relay has one, or you can damage the module output."],
+ c:"A bigger fuse on the same wiring is how trucks catch fire. Match the rating exactly.",
+ v:"Operate the circuit several times, check current draw with a clamp meter, and confirm the fuse holds."}),
+H(/repair.*(wire|harness|chafed|splice|connector)|replace.*(connector|terminal|harness)/i,
+ {t:["wire strippers","ratcheting crimper","heat gun","adhesive-lined heat shrink","terminal release tools","loom and ties","DMM"],
+ s:["Disconnect the batteries before cutting into anything.","Cut out the damaged section completely. Damaged copper is dark or green and must all go.","Use the SAME gauge wire or larger, and the correct type for the location.","Strip without nicking the strands, using the right hole on the stripper.","Crimp with a ratcheting crimper and the right die. A good crimp holds under a firm pull test.","Stagger the splices in a multi-wire repair so the bundle does not make a lump.","Slide adhesive-lined heat shrink over the joint and heat until the adhesive weeps out at both ends.","Re-loom the repair and secure it so it cannot rub, keeping it clear of heat and moving parts.","Fix the cause of the chafe: add a grommet, clip or standoff."],
+ c:"Never use twist-and-tape or household wire nuts on a truck. Never solder where the harness flexes; the stiff spot cracks.",
+ v:"Voltage drop test the repaired section under load, under about 0.2 V, and wiggle test it while watching the meter."}),
+H(/clean.*(ground|terminal)|repair.*(ground)/i,{t:["wire brush or abrasive pad","socket set","DMM","dielectric grease or protectant","torque wrench"],
+ s:["Disconnect the batteries.","Remove the ground ring or strap from its stud.","Clean BOTH surfaces to bright bare metal: the ring and the frame or block. Paint, primer and rust are all insulators.","Check the ring terminal itself. If the copper is green inside the crimp, cut it off and fit a new terminal.","Refit, torque the stud to spec, and coat the outside of the joint to keep moisture out.","Check the other grounds in the same circuit while you are there; they usually corroded at the same time."],
+ c:"A coat of paint under a ground ring is the most common cause of weird electrical faults. Bare metal to bare metal.",
+ v:"Voltage drop from the component's ground pin to the battery negative with the load running. You want under about 0.2 V."}),
+H(/replace.*(tie rod|drag link|kingpin|steering gear|ball joint)/i,
+ {t:["jack and rated stands","pickle fork or ball joint press","torque wrench","tie rod end puller","alignment equipment","grease gun"],
+ s:["Chock the wheels, lift the axle and support it on rated stands.","Count the turns or measure the length before you remove a tie rod end, so the new one starts close to the old setting.","Remove the cotter pin and castle nut, and separate the joint with a puller rather than hammering on the knuckle.","Clean the taper in the knuckle. Any dirt or burr there stops the new joint seating and it will work loose.","Fit the new part, torque the nut to spec, then tighten only as far as needed to line up the cotter pin hole, never back off.","Fit a NEW cotter pin every time.","Grease the new joints until fresh grease shows at the seal."],
+ c:"Steering parts are safety items. Never heat, bend or weld them, and never reuse a cotter pin.",
+ v:"Set the toe to spec (about 1/16 in toe-in typical), centre the steering wheel, and road test for pull and wander."}),
+H(/replace.*(shock|spring|u-?bolt|torque rod|air spring|air bag)/i,
+ {t:["jack and rated stands","impact and torque wrench","pry bar","new U-bolts and nuts","chocks"],
+ s:["Chock the wheels, lift and support the frame on rated stands so the suspension hangs free.","Dump the air from air suspension and support the axle before removing anything.","Support the axle on its own jack so it cannot drop or roll when the springs come loose.","Remove the old part. Cut badly rusted fasteners rather than rounding them off.","Always fit NEW U-bolts. Used U-bolts have stretched and will not hold clamp load.","Fit the new part, start all fasteners by hand, then torque in stages and in the pattern the maker gives.","Set the ride height on air suspension after the work."],
+ c:"A loaded leaf spring holds huge energy. Never put yourself in line with it. Never reuse U-bolts.",
+ v:"Re-torque the U-bolts after a short road test, check ride height side to side, and check the driveline angles if the ride height changed."}),
+H(/replace.*(tire|wheel)|torque.*wheel|mount.*wheel/i,
+ {t:["impact gun with impact sockets","torque wrench","wire brush","tire cage","clip-on chuck with inline gauge","jack and rated stands"],
+ s:["Chock the wheels, lift and support on rated stands.","Deflate completely before you break any bead or touch a multi-piece rim.","Clean the hub face, the wheel mating face and the studs to bare metal. Rust under the wheel will let it come loose.","Check the studs and nuts. Any stretched, galled or damaged hardware gets replaced.","Inflate only in a cage, with a clip-on chuck and a remote gauge, standing out of the trajectory.","Fit the wheel, run the nuts up by hand, then with the impact only until they are snug.","Torque with a torque wrench in a star pattern, in stages: about 50 lb-ft, then 50–80 % of final, then final (typically 450–500 lb-ft, check the OEM).","Match duals for tread depth, diameter and pressure, and set both to the same pressure."],
+ c:"Never inflate a tire outside a cage, and never stand in line with the rim. A rim failure is fatal. Any tire run under 80 % of pressure must come off and be inspected inside.",
+ v:"RE-TORQUE after the first 80–160 km of service, and check for rust streaks at the next inspection."}),
+H(/replace.*(egr|dpf|doc|scr|nox|def|aftertreatment)|clean.*(dpf|doc)|ash/i,
+ {t:["socket set","torque wrench","new gaskets and clamps","penetrating oil","scan tool","infrared thermometer"],
+ s:["Let the aftertreatment cool fully. Check with an IR gun before touching, it stays hot long after a regen.","Find and fix the UPSTREAM cause first: oil consumption, coolant leak, bad injector or bad DEF. A new DPF will plug again otherwise.","Soak the clamp and V-band fasteners with penetrant. Exhaust hardware seizes.","Support the section before you undo the last clamp. These assemblies are heavy and awkward.","Note the direction of flow and the sensor port positions before removal.","Fit NEW gaskets and clamps. Reused exhaust gaskets leak, and a leak upstream of a sensor gives false readings.","Torque the V-band clamps evenly to spec, working around them, not all at once on one side.","Refit the sensors into the correct ports. Swapped inlet and outlet NOx sensors cause a fault that looks like a failed catalyst.","Reset the ash accumulator or soot values in the ECM per the maker."],
+ c:"Never cut or delete aftertreatment. It is illegal and the truck will derate anyway.",
+ v:"Run a forced regen or the maker's performance test, watch the inlet and outlet temperatures or NOx readings change correctly, and confirm no codes return."}),
+H(/replace.*(a\/c|compressor|condenser|receiver|drier|expansion|evaporator)|recharge|refrigerant|evacuate/i,
+ {t:["recovery and recharge machine","manifold gauge set","vacuum pump","electronic leak detector or UV light","refrigerant oil","ODP certification"],
+ s:["You must hold an ODP card in Ontario to handle refrigerant. Venting it is illegal.","Recover all the refrigerant into the machine. Never vent to atmosphere.","Replace the receiver-drier or accumulator any time the system is opened. It absorbs moisture and is saturated once exposed.","Cap every opening immediately. Moisture in the system makes acid.","Fit the new part with new O-rings, lightly oiled with the correct refrigerant oil.","Add the right amount of oil for the part you replaced, following the maker's chart.","Pull a deep vacuum for at least 30–45 minutes and then close the valves and watch it hold. If the vacuum rises, you still have a leak.","Charge by WEIGHT from the machine, to the amount on the underhood label. Never charge by gauge feel alone."],
+ c:"Liquid refrigerant causes instant frostbite. Goggles and gloves. Never use compressed air with refrigerant in a system.",
+ v:"Run the system and check high and low side pressures against the chart for the ambient temperature, check vent temperature, and leak detect the joints you opened."}),
+H(/replace.*(coolant|hose|radiator|cac|charge air cooler)|flush/i,
+ {t:["socket set and hose clamp pliers","catch pan","refractometer","pressure tester","correct coolant"],
+ s:["Let the engine cool completely.","Drain into a clean container. Used coolant is hazardous waste and never goes down the drain.","Note the hose routing before removal and check the clamps; replace tired ones rather than reusing.","Clean the fitting necks so the new hose seats on clean metal.","Fit the new part, position the clamps past the hose bead and tighten evenly.","Refill slowly with the correct coolant type and mix, roughly 50/50 for Ontario winters.","Bleed the air out with the vents open and the heater on full, topping up as the level drops."],
+ c:"Never mix coolant chemistries. Ethylene glycol is toxic and tastes sweet to animals, so clean up every spill.",
+ v:"Pressure test the system, run to operating temperature and bleed again, then check the freeze protection with a refractometer, about −37 °C at 50/50."}),
+H(/adjust|set .*(toe|ride height|lash|free pedal|stroke)|align/i,
+ {t:["appropriate measuring tool for the adjustment","wrenches","torque wrench","OEM spec"],
+ s:["Look the spec up for THIS truck. Do not work from memory.","Fix worn parts first. Adjusting around worn components never holds.","Make sure the truck is set up the way the spec assumes: level ground, correct ride height, correct temperature, correct pressure.","Measure before you touch anything and write it down.","Make the adjustment in small steps and re-measure each time.","Lock the adjustment with its locknut or clamp and re-measure, since tightening often moves it.","Record the final numbers on the work order."],
+ c:"Adjusting to hide a worn part is a comeback waiting to happen. Find out why it went out of adjustment.",
+ v:"Measure once more after everything is torqued, and road test if the adjustment affects how the truck drives."}),
+H(/replace.*(seal|gasket|o-?ring)/i,{t:["scraper or gasket removal tool","solvent and lint-free rags","seal driver","torque wrench","new seal and the correct sealant"],
+ s:["Find out WHY the old seal failed. Bearing play, high crankcase pressure or a plugged vent will kill the new one too.","Clean both surfaces completely. Do not gouge aluminum with a steel scraper.","Check the sealing surface for grooves worn by the old seal. A grooved shaft may need a repair sleeve.","Fit the new seal square, with the lip facing the correct way (usually toward the fluid), using a driver sized to the seal.","Lightly oil the lip before fitting so it does not tear on first start.","Use the specified sealant only where the maker calls for it. More is not better; squeeze-out can block passages.","Torque the fasteners in sequence and in stages."],
+ c:"A seal driven in crooked or with a damaged lip leaks right away. Take your time getting it square.",
+ v:"Run the truck to temperature, then clean the area and look again after a short road test."}),
+H(/replace.*(valve|solenoid)/i,{t:["line wrenches","DMM","torque wrench","soapy water or leak detector","thread sealant if specified"],
+ s:["Depressurize the system completely: drain the air tanks, or relieve the hydraulic or fuel pressure.","Label every line before you disconnect it. Ports look alike and getting them crossed can be dangerous.","Use a line wrench on soft fittings so you do not round them.","Compare old and new for port layout, thread type and electrical connector.","Use thread sealant only where the maker specifies, and keep it off the first two threads so nothing gets into the valve.","Fit by hand first, then tighten to spec. Over-tightening distorts valve bodies.","Reconnect the electrical plug and check it locks."],
+ c:"Crossed brake valve ports can make the brakes apply or release at the wrong time. Label everything.",
+ v:"Pressurize and leak test every joint, then operate the system and confirm the valve does its job at the right pressure or signal."}),
+H(/replace.*(filter)/i,{t:["filter wrench","clean rags","catch pan"],
+ s:["Clean around the filter head so dirt does not fall into the opening.","Catch the fluid and dispose of it as waste.","Check the old seal came off with the filter. A doubled seal will leak or suck air.","Match the new filter to the correct part number, not just the size.","Lightly oil the new seal, spin it on by hand and tighten the amount printed on the filter.","Refill the system and check the level after running."],
+ c:"Never run a filter past its interval to save money. Filters are the cheapest insurance on the truck.",
+ v:"Run the engine, check for leaks and confirm the level and pressure are right. Reset the service reminder."}),
+H(/program|reprogram|calibrate|reflash|parameter|enter the correct|coding|relearn|reset/i,
+ {t:["laptop with OEM software and a current subscription","diagnostic cable","battery charger / maintainer"],
+ s:["Put a charger on the batteries. A voltage drop partway through a flash can brick the module.","Record the existing parameters before you change anything.","Confirm you have the right file for this exact serial number and emissions year.","Do not interrupt the process: no key cycles, no unplugging, no starting the engine.","Enter any calibration or trim codes that go with new parts, exactly as printed on the part.","Save or print the completed configuration for the file."],
+ c:"A failed flash can leave the module dead and needing replacement. Stable power and the right file, every time.",
+ v:"Key cycle, confirm the module reports the new calibration, clear codes and road test."}),
+H(/rebuild|overhaul|in-?frame/i,{t:["full service manual","micrometers and dial bore gauge","plastigage","torque wrench with angle gauge","engine stand or lifting gear","cleaning equipment"],
+ s:["Find the root cause of the failure before you rebuild, or you will do it twice.","Photograph and label everything as it comes apart, and keep parts in order.","Clean every part and every oil passage. Debris left behind kills a fresh rebuild.","Measure everything against the wear limits and write the numbers down. Do not reuse anything out of spec.","Use all new seals, gaskets and one-use fasteners.","Check clearances with plastigage or measurement as you assemble, not after.","Torque in the proper sequence and stages, including any angle (torque-turn) steps.","Prime the lubrication system before the first start."],
+ c:"Torque-to-yield bolts are one use only. Reusing them is how fresh rebuilds come apart.",
+ v:"Follow the maker's run-in procedure, then do a performance test and an oil sample after the break-in interval."}),
+H(/bleed|purge the (air|system)/i,{t:["bleeder wrench","clear hose and catch bottle","correct fluid","helper or pressure bleeder"],
+ s:["Top up the reservoir first and keep it topped up through the whole job. Letting it run dry starts you over.","Work in the sequence the maker gives, which is usually the furthest point from the source first.","Open the bleeder, let the fluid and air out, then close it before the pedal or pressure is released.","Keep going at each point until the fluid runs clear with no bubbles.","Check the level and top up at the end."],
+ c:"Never reuse fluid that has been bled out. Brake fluid absorbs moisture and strips paint.",
+ v:"Check for a firm pedal or correct pressure, then test the system before the truck goes out."}),
+H(/clean|wash|decarbon|descal/i,{t:["correct cleaner for the material","soft brush","low-pressure water or air","gloves and eye protection"],
+ s:["Find out what made it dirty. Cleaning without fixing the cause just buys time.","Protect anything nearby that must not get wet or chemical on it: sensors, connectors, belts.","Use the cleaner the maker allows for that material. Caustic cleaners eat aluminum.","Work gently. High-pressure water will bend cooler fins and force water into bearings and connectors.","Rinse fully and dry before reassembly.","Inspect the part once it is clean, since damage hides under dirt."],
+ c:"Never pressure wash directly at seals, sensors, connectors or wheel bearings.",
+ v:"Run the system and confirm the reading that was out of spec, such as temperature, restriction or pressure, is now normal."}),
+H(/drain|refill|top up|change the (oil|fluid|coolant)/i,
+ {t:["catch pan of the right size","filter wrench","funnel","correct fluid","torque wrench"],
+ s:["Check the maker's fluid specification and capacity first. The wrong fluid can wreck the unit.","Warm the fluid slightly so it drains fully, but not so hot it burns you.","Drain into a clean pan and look at what comes out: metal, water, fuel smell or coolant all tell you something.","Clean the drain plug, fit a NEW washer where one is used, and torque to spec.","Change the filter at the same time.","Refill to the correct level using the proper method. Many units are checked hot and running.","Dispose of the used fluid as hazardous waste."],
+ c:"Checking a level the wrong way, cold instead of hot, gives a wrong level and can ruin the unit.",
+ v:"Run the truck, recheck the level the way the maker specifies, and check for leaks."}),
+H(/regen|forced regeneration/i,{t:["scan tool","clear area outdoors","fire extinguisher","IR thermometer"],
+ s:["Fix any fault that would abort the regen first. A truck with a live fault will not complete one.","Park outdoors, away from anything flammable, with the stack clear of overhead obstructions.","Check the fluid levels and that the engine is at operating temperature.","Start the regen from the scan tool and stay with the truck the whole time.","Watch the inlet and outlet temperatures climb. If they do not, stop and diagnose rather than repeating it.","Let it finish and cool down before touching the exhaust."],
+ c:"Exhaust during a regen is hot enough to start a fire and will burn you badly. Never leave it unattended.",
+ v:"Confirm the soot load has dropped and no codes returned. If it plugs again soon, the real cause is still there."}),
+H(/.*/,{t:["basic hand tools","torque wrench","OEM service information for this truck"],
+ s:["Look up the procedure for THIS make, model and serial number before you start. Never work from memory.","Chock the wheels, set the parking brake and tag the key out.","Disconnect the batteries if the job touches anything electrical.","Clean the area before opening anything, so dirt does not get inside.","Label and photograph connections before you take them apart.","Use new seals, gaskets and one-use fasteners where the maker calls for them.","Start every fastener by hand, then torque to spec in the stated sequence and stages.","Put it back together in reverse order and check nothing was left loose or disconnected."],
+ c:"If the procedure is not clear, stop and ask. Guessing on a truck is how people get hurt.",
+ v:"Repeat the test that found the fault and confirm the reading is now in spec. Road test if the complaint happened while driving."}),
+];
+const howFor=(list,txt)=>{for(const [re,o] of list) if(re.test(txt)) return o; return null};
+
 const SSTEPS=["Perform visual inspection","Diagnose and troubleshoot","Repair / replace","Verify and document the repair"];
 
 
@@ -9994,6 +10273,15 @@ function jobRow(j){
    <span class="grade ${d?"g-"+d.g:""}">${d?d.g:isCur?"→":"—"}</span></button>`;
 }
 
+function howBlock(o,title){
+ if(!o)return "";
+ return `<div class="howto"><span class="label">${title}</span>
+  <div class="hrow"><b>Tools</b><span>${o.t.join(" · ")}</span></div>
+  ${o.w?`<div class="hrow"><b>Where</b><span>${o.w}</span></div>`:""}
+  <ol class="hsteps">${o.s.map(x=>`<li>${x}</li>`).join("")}</ol>
+  ${o.c?`<div class="hwarn"><b>Watch out</b> ${o.c}</div>`:""}
+  ${o.v?`<div class="hrow"><b>Prove it</b><span>${o.v}</span></div>`:""}</div>`;
+}
 function hoursUsed(j,c){return c.ran.reduce((a,i)=>a+j.tests[i].h,0)+(c.fix!=null&&c.res?j.fixes[c.fix].h:0)}
 
 function job(){
@@ -10020,7 +10308,8 @@ function job(){
     h+=`<div class="section"><details class="wo"${c.bopen?" open":""}><summary class="wo-top"><span>SHOP CLASS · ${bf.t.toUpperCase()}</span><span>${c.bq===bf.a?"✔ CHECK PASSED":"✘ REVIEW"}</span></summary><div class="wo-body">${body}<div class="note"><b>${bf.q}</b><br>${bf.o[bf.a]}. ${bf.why}</div></div></details></div>`;
   }
   h+=`<div class="section"><h2>1 · Run tests</h2><p class="muted">Every test costs shop time. Don't run everything. Think about what the complaint tells you.</p>
-   <div class="tools">${tools.map(t=>`<div class="tg"><span class="label">${t}</span>${j.tests.map((x,i)=>x.t!==t?"":`<button class="test" data-t="${i}" ${c.ran.includes(i)?"disabled":""}><span>${x.n}</span><span class="h">${c.ran.includes(i)?"done":x.h.toFixed(1)+" h"}</span></button>`).join("")}</div>`).join("")}</div></div>
+   <div class="tools">${tools.map(t=>`<div class="tg"><span class="label">${t}</span>${j.tests.map((x,i)=>x.t!==t?"":`<div class="testwrap"><button class="test" data-t="${i}" ${c.ran.includes(i)?"disabled":""}><span>${x.n}</span><span class="h">${c.ran.includes(i)?"done":x.h.toFixed(1)+" h"}</span></button>
+      <details class="howd"><summary>How do I run this test?</summary>${howBlock(howFor(THOW,x.t+" "+x.n),"Running this test")}</details></div>`).join("")}</div>`).join("")}</div></div>
    <div class="section"><h2>Findings</h2><div class="log" id="log">${c.ran.length?c.ran.map(i=>`<div class="e"><b>▸ ${esc(j.tests[i].n)}</b><br>${esc(j.tests[i].r)}</div>`).join(""):`<div class="empty">No readings yet. Run a test.</div>`}</div></div>
    <div class="section"><h2>2 · Cause</h2><div class="opts">${j.causes.map((x,i)=>`<label class="opt"><input type="radio" name="cause" id="cause${i}" value="${i}" ${c.cause===i?"checked":""}><span>${x}</span></label>`).join("")}</div></div>
    <div class="section"><h2>3 · Repair</h2><div class="opts">${j.fixes.map((x,i)=>`<label class="opt"><input type="radio" name="fix" id="fix${i}" value="${i}" ${c.fix===i?"checked":""}><span>${x.n}<small>Parts ${money(x.p)} · Labour ${x.h.toFixed(1)} h</small></span></label>`).join("")}</div></div>
@@ -10041,6 +10330,13 @@ function result(j,c){
    ${j.cz?`<div class="note"><span class="label">What caused it on this truck</span><br>${j.cz}</div>`:""}
    <div class="note"><span class="label">Tests that cracked it</span><br>${keys.map(i=>(c.ran.includes(i)?"✔ ":"✘ ")+j.tests[i].n).join("<br>")}</div>
   </div></div>
+  <div class="section"><h2>How you actually do this repair</h2>
+   <div class="wo"><div class="wo-body">
+    <div class="complaint">${j.fixes[j.f].n}</div>
+    <div class="kv"><div><b>Parts</b>${money(j.fixes[j.f].p)}</div><div><b>Labour</b>${j.fixes[j.f].h.toFixed(1)} h</div></div>
+    ${howBlock(howFor(FHOW,j.fixes[j.f].n),"Procedure")}
+    <p class="muted">General shop procedure. Always pull the OEM service information for the exact truck and use its torque values and steps.</p>
+   </div></div></div>
   <div class="section"><div class="row"><button class="btn" data-go="board">${r.g==="F"?"Back to the bay":"Next job"}</button><button class="btn ghost" id="retry">Redo this job</button></div></div>`;
 }
 
@@ -11255,8 +11551,4 @@ document.addEventListener("change",e=>{
 });
 </script>
 
-<script>
-if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})})}
-</script>
-</body>
-</html>
+</body></html>
